@@ -68,30 +68,41 @@
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-function checkPosition(pos) {
-  const { latitude, longitude, accuracy } = pos.coords;
+    function checkPosition(pos) {
+      const { latitude, longitude, accuracy } = pos.coords;
 
-  for (const poi of pois) {
-    const d = distance(latitude, longitude, poi.lat, poi.lon);
+      for (const poi of pois) {
+        const d = distance(latitude, longitude, poi.lat, poi.lon);
 
-    // Add some tolerance based on GPS accuracy
-    const threshold = 10 + accuracy/2; // meters
-    if (d < threshold && !inside.has(poi.name)) {
-      inside.add(poi.name);
-      showPOI(poi);
+        // Add some tolerance based on GPS accuracy
+        const threshold = 10; //+ accuracy/3; // meters
+        if (d <= threshold && !inside.has(poi.name)) {
+          inside.add(poi.name);
+          showPOI(poi);
+        }
+
+        if (d > threshold && inside.has(poi.name)) {
+          inside.delete(poi.name);
+        }
+
+        if(inside.length <=0)
+          clean();
+      }
     }
-
-    if (d >= threshold && inside.has(poi.name)) {
-      inside.delete(poi.name);
-    }
-  }
-}
 
     function showPOI(poi) {
+      console.log("Show point: " + poi.name);
       info.innerHTML = poi.descr;
       photo.src = "img/" + encodeURIComponent(poi.name) + ".jpg";
       photo.style.display = "block";
       sound_notification.play().catch(e => console.log("Audio blocked:", e));
+    }
+
+    function clean()
+    {
+      console.log("Cleaning");
+      info.innerHTML = "Zoek verder";
+      photo.style.display = "none";
     }
 
     async function startApp()

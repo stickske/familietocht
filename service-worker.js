@@ -1,4 +1,4 @@
-const CACHE_DATA = 'geo-photo-cache-v1';
+const CACHE_DATA_002 = 'geo-photo-cache-v1';
 const FILES_TO_CACHE = [
   'index.html',
   'pois.json',
@@ -10,7 +10,7 @@ const FILES_TO_CACHE = [
 self.addEventListener('install', evt => {
   evt.waitUntil(
     (async () => {
-      const cache = await caches.open(CACHE_DATA);
+      const cache = await caches.open(CACHE_DATA_002);
 
       // Basisbestanden
       await cache.addAll(FILES_TO_CACHE);
@@ -42,7 +42,7 @@ self.addEventListener('activate', evt => {
   evt.waitUntil(
     caches.keys().then(keyList => {
       return Promise.all(keyList.map(key => {
-        if(key !== CACHE_DATA) return caches.delete(key);
+        if(key !== CACHE_DATA_002) return caches.delete(key);
       }));
     })
   );
