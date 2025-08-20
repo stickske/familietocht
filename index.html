@@ -68,7 +68,13 @@
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    function checkPosition(pos) {
+    
+    //let last_pos = null;
+
+    function checkPosition(pos)
+    {
+      //last_pos = pos;
+
       const { latitude, longitude, accuracy } = pos.coords;
 
       for (const poi of pois) {
@@ -118,6 +124,8 @@
       photo.style.display = "none";
     }
 
+
+
     async function startApp()
     {
       console.log("Start APP");
@@ -136,7 +144,13 @@
       console.log(pois);
 
       // Geo locatie starten
+      // Only check Geo if changes are detected in position
       navigator.geolocation.watchPosition(checkPosition, console.error, {enableHighAccuracy:true});
+
+      // Forced check Geo data every 2sec
+      // setInterval(() => {
+      //   if(last_pos) checkPosition(last_pos);
+      // }, 2000);
 
       // Wake Lock aanvragen
       try {
