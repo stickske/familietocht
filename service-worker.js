@@ -21,7 +21,6 @@ self.addEventListener('install', evt => {
         const pois = await response.json();
 
         for (const poi of pois) {
-          //Cache images by name. The img tag is reserved for the image to show when at point
           const imgUrl = 'img/' + poi.name + ".jpg";
           try {
             await cache.add(imgUrl);
