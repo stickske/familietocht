@@ -47,6 +47,25 @@
       }
     }
 
+
+    //Screen always wake function
+    let wakeLock = null;
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          console.log('Wake Lock released');
+        });
+      } catch (err) {
+        console.error(`${err.name}, ${err.message}`);
+      }
+    }
+
+    // Aanroepen bij laden
+  requestWakeLock();
+
+
+
     navigator.geolocation.watchPosition(checkPosition, console.error, {enableHighAccuracy:true});
 
     fetch("pois.json")
