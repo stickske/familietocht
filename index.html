@@ -1,27 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>Familie fietstocht</title>
+  <title>Familie Fietstocht</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
   <style>
-    body { font-family: sans-serif; text-align: center; margin: 20px; background-color: black;}
-    img { max-width: 100%; display: none; }
-    h1 { color:white; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 20px;
+      background-color: black;
+      color: white;
+    }
+    img { max-width: 100%; display: none; margin-top: 20px; }
+    button { font-size: 1.2em; padding: 10px 20px; margin: 20px; }
   </style>
 </head>
 <body>
-  <h1 id="info">Familie fietstocht</h1>
+  <h1 id="info">Familie Fietstocht</h1>
   <img id="photo" src="" alt="POI Photo">
-  <audio id="ding" src="ding.mp3" preload="auto"></audio>
+  <audio id="sound_start" src="start.mp3" preload="auto"></audio>
+  <audio id="sound_notification" src="ding.mp3" preload="auto"></audio>
+  <br>
+  <button id="startBtn">Start Fietstocht</button>
 
   <script>
+
+
+
+    let CACHE_DATA_FOR_OFFLINE = false;
+
+
+    
+
+    if(CACHE_DATA_FOR_OFFLINE === false)
+    {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log("ServiceWorker verwijderd");
+          }
+        });
+      }
+    }
+
+
     const info = document.getElementById("info");
     const photo = document.getElementById("photo");
-    const sound = document.getElementById("ding");
+    const sound_start = document.getElementById("sound_start");
+    const sound_notification = document.getElementById("sound_notification");
+    const startBtn = document.getElementById("startBtn");
+
     let inside = new Set();
     let pois = [];
+    let wakeLock = null;
 
-    function distance(lat1, lon1, lat2, lon2) {
+    // Afstand in meters
+    function distance(lat1, lon1, lat2, lon2)
+    {
       const R = 6371000;
       const dLat = (lat2-lat1) * Math.PI/180;
       const dLon = (lon2-lon1) * Math.PI/180;
@@ -31,53 +68,76 @@
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    function checkPosition(pos) {
-      const {latitude, longitude} = pos.coords;
-      for (const poi of pois) {
-        const d = distance(latitude, longitude, poi.lat, poi.lon);
-        if (d < 10 && !inside.has(poi.name)) {
-          inside.add(poi.name);
-          info.innerHTML = poi.descr;
-          photo.src = "img/" + poi.name + ".jpg";
-          photo.style.display = "block";
-          sound.play();
-        }
-        if (d >= 10 && inside.has(poi.name)) {
-          inside.delete(poi.name);
-        }
-      }
+function checkPosition(pos) {
+  const { latitude, longitude, accuracy } = pos.coords;
+
+  for (const poi of pois) {
+    const d = distance(latitude, longitude, poi.lat, poi.lon);
+
+    // Add some tolerance based on GPS accuracy
+    const threshold = 10 + accuracy/2; // meters
+    if (d < threshold && !inside.has(poi.name)) {
+      inside.add(poi.name);
+      showPOI(poi);
     }
 
+    if (d >= threshold && inside.has(poi.name)) {
+      inside.delete(poi.name);
+    }
+  }
+}
 
-    //Screen always wake function
-    let wakeLock = null;
-    async function requestWakeLock() {
+    function showPOI(poi) {
+      info.innerHTML = poi.descr;
+      photo.src = "img/" + encodeURIComponent(poi.name) + ".jpg";
+      photo.style.display = "block";
+      sound_notification.play().catch(e => console.log("Audio blocked:", e));
+    }
+
+    async function startApp()
+    {
+      console.log("Start_0001");
+
+      startBtn.style.display = "none";
+
+      // POI-data laden
+      try {
+        const res = await fetch("pois.json");
+        pois = await res.json();
+      } catch(err) {
+        console.error("Fout bij laden POI-data:", err);
+        return;
+      }
+
+      console.log(pois);
+
+      // Geo locatie starten
+      navigator.geolocation.watchPosition(checkPosition, console.error, {enableHighAccuracy:true});
+
+      // Wake Lock aanvragen
       try {
         wakeLock = await navigator.wakeLock.request('screen');
-        wakeLock.addEventListener('release', () => {
-          console.log('Wake Lock released');
-        });
-      } catch (err) {
-        console.error(`${err.name}, ${err.message}`);
+        wakeLock.addEventListener('release', () => console.log('Wake Lock released'));
+      } catch(err) {
+        console.error('Wake Lock error:', err.name, err.message);
+      }
+
+      // Start audio
+      sound_start.play().catch(e => console.log("Audio interactie START:", e));
+
+      // Service Worker
+      if(CACHE_DATA_FOR_OFFLINE === true)
+      {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.register("service-worker.js")
+            .then(() => console.log("Service Worker geregistreerd"))
+            .catch(err => console.error("Service Worker fout:", err));
+        }
       }
     }
 
-    // Aanroepen bij laden
-  requestWakeLock();
+    startBtn.addEventListener("click", startApp);
 
-
-
-    navigator.geolocation.watchPosition(checkPosition, console.error, {enableHighAccuracy:true});
-
-    fetch("pois.json")
-      .then(res => res.json())
-      .then(data => { pois = data; })
-      .catch(err => console.error("Fout bij laden POI-data:", err));
-
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("Service Worker geregistreerd"));
-    }
   </script>
 </body>
 </html>
