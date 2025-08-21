@@ -124,6 +124,18 @@
       photo.style.display = "none";
     }
 
+    //Only per user request
+    function fullScreen()
+    {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) { /* Safari */
+        document.documentElement.webkitRequestFullscreen();
+      } else if (document.documentElement.msRequestFullscreen) { /* IE/Edge */
+        document.documentElement.msRequestFullscreen();
+      }
+    }
+
 
 
     async function startApp()
@@ -131,6 +143,8 @@
       console.log("Start APP");
 
       startBtn.style.display = "none";
+
+      fullScreen();
 
       // POI-data laden
       try {
