@@ -28,7 +28,7 @@
 
 
 
-    let CACHE_DATA_FOR_OFFLINE = false;
+    let CACHE_DATA_FOR_OFFLINE = false; //For full reset in service-worker.js you need to increment CACHE_DATA_002 to fully reset the local data
 
 
     
@@ -82,26 +82,16 @@
 
         // Add some tolerance based on GPS accuracy
         const threshold = 10; //+ accuracy/3; // meters
-        if (d <= threshold && !inside.has(poi.name))
+        if (d <= threshold && !inside.has(poi.img))
         {
-          inside.add(poi.name);
+          inside.add(poi.img);
 
           //Show the current point
           showPOI(poi);
-
-          //Show the next point in line
-          // const currentIndex = pois.indexOf(poi);
-          // if (currentIndex + 1 < pois.length) {
-          //   showPOI(pois[currentIndex + 1]);
-          // } else {
-          //   //Finnish
-          //   console.log("Finnish");
-          //   clean(); // no next POI
-          // }
         }
 
-        if (d > threshold && inside.has(poi.name)) {
-          inside.delete(poi.name);
+        if (d > threshold && inside.has(poi.img)) {
+          inside.delete(poi.img);
         }
 
         if(inside.size <=0)
@@ -111,14 +101,17 @@
 
     function showPOI(poi)
     {
-      //Search poi to show based on current poi show data
-      const poiByShow = pois.find(p => p.name === poi.show);
+      //To show location specified in current location show property
+      let poiByShow = pois.find(p => p.img === poi.show);
+
+      //To show current location
+      //poiByShow = poi;
 
       if(poiByShow)
       {
-        console.log("Show point: " + poiByShow.name);
+        console.log("Show point: " + poiByShow.img);
         info.innerHTML = poiByShow.descr;
-        photo.src = "img/" + encodeURIComponent(poiByShow.name) + ".jpg";
+        photo.src = "img/" + encodeURIComponent(poiByShow.img) + ".jpg";
         photo.style.display = "block";
         sound_notification.play().catch(e => console.log("Audio blocked:", e));
       }
@@ -148,16 +141,12 @@
         return;
       }
 
+
       //console.log(pois);
 
       // Geo locatie starten
       // Only check Geo if changes are detected in position
       navigator.geolocation.watchPosition(checkPosition, console.error, {enableHighAccuracy:true});
-
-      // Forced check Geo data every 2sec
-      // setInterval(() => {
-      //   if(last_pos) checkPosition(last_pos);
-      // }, 2000);
 
       // Wake Lock aanvragen
       try {

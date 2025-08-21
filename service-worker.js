@@ -15,13 +15,13 @@ self.addEventListener('install', evt => {
       // Basisbestanden
       await cache.addAll(FILES_TO_CACHE);
 
-      // POI-afbeeldingen dynamisch toevoegen
+      // POI-afbeelding namen dynamisch toevoegen
       try {
         const response = await fetch('pois.json');
         const pois = await response.json();
 
         for (const poi of pois) {
-          const imgUrl = 'img/' + poi.name + ".jpg";
+          const imgUrl = 'img/' + poi.img + ".jpg";
           try {
             await cache.add(imgUrl);
           } catch (err) {
