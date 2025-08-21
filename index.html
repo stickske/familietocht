@@ -144,8 +144,6 @@
 
       startBtn.style.display = "none";
 
-      fullScreen();
-
       // POI-data laden
       try {
         const res = await fetch("pois.json");
@@ -172,6 +170,14 @@
 
       // Start audio
       sound_start.play().catch(e => console.log("Audio interactie START:", e));
+
+      //Full screen
+      try{
+        fullScreen();
+      }catch(err)
+      {
+        console.log("Full screen error");
+      }
 
       // Service Worker
       if(CACHE_DATA_FOR_OFFLINE === true)
